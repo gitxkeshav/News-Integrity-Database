@@ -6,8 +6,13 @@ export default function AddUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/api/users", form);
-    alert("✅ User added successfully!");
+    try {
+      await axios.post("/api/users", form);
+      alert("✅ User added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to add user. Check backend or connection.");
+    }
   };
 
   return (

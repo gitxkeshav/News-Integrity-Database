@@ -21,7 +21,7 @@ USE FakeNewsDB;
 -- USER TABLE
 CREATE TABLE IF NOT EXISTS UserAccount (
     UserID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(100) NOT NULL,
+    UserName VARCHAR(100) NOT NULL,
     Email VARCHAR(150) NOT NULL UNIQUE,
     UserRole ENUM('admin', 'fact-checker', 'user') NOT NULL DEFAULT 'user',
     PasswordHash VARCHAR(255) NOT NULL,
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS CredibilityCheck (
 
 
 -- USERS
-INSERT INTO UserAccount (Name, Email, UserRole, PasswordHash) VALUES
+INSERT INTO UserAccount (UserName, Email, UserRole, PasswordHash) VALUES
 ('Alice Admin', 'alice@example.com', 'admin', 'hash_admin_123'),
 ('Bob Checker', 'bob@example.com', 'fact-checker', 'hash_checker_123'),
 ('Charlie User', 'charlie@example.com', 'user', 'hash_user_123');

@@ -4,8 +4,8 @@ import AddUser from "./components/AddUser";
 import AddSource from "./components/AddSource";
 import AddArticle from "./components/AddArticle";
 import ReportArticle from "./components/ReportArticle";
-import AddCredibilityCheck from "./components/AddCredibilitycheck";
-import ViewCredibilityChecks from "./components/ViewCredibilitychecks";
+import AddCredibilityCheck from "./components/AddCredibilityCheck";
+import ViewCredibilityChecks from "./components/ViewCredibilityChecks";
 import ViewReports from "./components/ViewReports";
 
 function App() {

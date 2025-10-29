@@ -5,7 +5,7 @@ export default function ViewCredibilityChecks() {
   const [checks, setChecks] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/credibility").then((res) => setChecks(res.data));
+    axios.get("/api/credibility").then((res) => setChecks(res.data));
   }, []);
 
   return (

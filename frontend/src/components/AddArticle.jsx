@@ -2,12 +2,23 @@ import React, { useState } from "react";
 import axios from "axios";
 
 export default function AddArticle() {
-  const [form, setForm] = useState({ title: "", content: "", url: "", source_id: "", publish_date: "" });
+  const [form, setForm] = useState({
+    title: "",
+    content: "",
+    url: "",
+    source_id: "",
+    publish_date: "",
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/api/articles", form);
-    alert("✅ Article added successfully!");
+    try {
+      await axios.post("/api/articles", form);
+      alert("✅ Article added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to add article. Check backend or connection.");
+    }
   };
 
   return (

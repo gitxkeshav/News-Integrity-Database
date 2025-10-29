@@ -6,8 +6,13 @@ export default function ReportArticle() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/api/reports", form);
-    alert("🚨 Report submitted successfully!");
+    try {
+      await axios.post("/api/reports", form);
+      alert("🚨 Report submitted successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to submit report. Check backend or connection.");
+    }
   };
 
   return (

@@ -12,8 +12,13 @@ export default function AddCredibilityCheck() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/api/credibility", form);
-    alert("✅ Credibility check added successfully!");
+    try {
+      await axios.post("/api/credibility", form);
+      alert("✅ Credibility check added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to add credibility check. Check backend or connection.");
+    }
   };
 
   return (

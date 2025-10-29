@@ -5,7 +5,7 @@ export default function ViewReports() {
   const [reports, setReports] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/reports").then((res) => setReports(res.data));
+    axios.get("/api/reports").then((res) => setReports(res.data));
   }, []);
 
   return (

@@ -6,8 +6,13 @@ export default function AddSource() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/api/sources", form);
-    alert("✅ Source added successfully!");
+    try {
+      await axios.post("/api/sources", form);
+      alert("✅ Source added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to add source. Check backend or connection.");
+    }
   };
 
   return (

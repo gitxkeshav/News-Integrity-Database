@@ -3,7 +3,14 @@ from flask_cors import CORS
 from db_config import get_connection
 
 app = Flask(__name__)
+
+
 CORS(app)
+
+@app.route("/ping", methods=["GET"])
+def ping():
+    return "pong", 200
+
 
 # -------------------------------------
 # USER ROUTES
@@ -11,15 +18,19 @@ CORS(app)
 @app.route("/api/users", methods=["POST"])
 def add_user():
     data = request.json
-    db = get_connection()
-    cursor = db.cursor()
-    query = "INSERT INTO UserAccount (Name, Email, UserRole, PasswordHash) VALUES (%s, %s, %s, %s)"
-    values = (data["name"], data["email"], data["role"], data["password"])
-    cursor.execute(query, values)
-    db.commit()
-    cursor.close()
-    db.close()
-    return jsonify({"message": "User added successfully"}), 201
+    try:
+        db = get_connection()
+        cursor = db.cursor()
+        query = "INSERT INTO UserAccount (Name, Email, Role, PasswordHash) VALUES (%s, %s, %s, %s)"
+        values = (data["name"], data["email"], data["role"], data["password"])
+        cursor.execute(query, values)
+        db.commit()
+        cursor.close()
+        db.close()
+        return jsonify({"message": "User added successfully"}), 201
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 # -------------------------------------
 # SOURCE ROUTES
@@ -78,12 +89,13 @@ def get_reports():
     db = get_connection()
     cursor = db.cursor(dictionary=True)
     cursor.execute("""
-        SELECT r.ReportID, u.Name AS Reporter, a.Title AS ArticleTitle,
-               r.Reason, r.Status, r.ReportDate
-        FROM Report r
-        JOIN UserAccount u ON r.UserID = u.UserID
-        JOIN Article a ON r.ArticleID = a.ArticleID
-        ORDER BY r.ReportDate DESC
+       SELECT r.ReportID, u.Name AS Reporter, a.Title AS ArticleTitle,
+       r.Reason, r.Status, r.ReportDate
+FROM Report r
+JOIN UserAccount u ON r.UserID = u.UserID
+JOIN Article a ON r.ArticleID = a.ArticleID
+ORDER BY r.ReportDate DESC
+
     """)
     results = cursor.fetchall()
     cursor.close()
@@ -116,16 +128,36 @@ def get_credibility_checks():
     cursor = db.cursor(dictionary=True)
     cursor.execute("""
         SELECT c.CheckID, a.Title AS ArticleTitle, c.AI_Score, c.FactCheckScore,
-               c.FinalVerdict, u.Name AS CheckedBy, c.CheckDate
-        FROM CredibilityCheck c
-        JOIN Article a ON c.ArticleID = a.ArticleID
-        LEFT JOIN UserAccount u ON c.CheckedBy = u.UserID
-        ORDER BY c.CheckDate DESC
+       c.FinalVerdict, u.Name AS CheckedBy, c.CheckDate
+FROM CredibilityCheck c
+JOIN Article a ON c.ArticleID = a.ArticleID
+LEFT JOIN UserAccount u ON c.CheckedBy = u.UserID
+ORDER BY c.CheckDate DESC
+
     """)
     results = cursor.fetchall()
     cursor.close()
     db.close()
     return jsonify(results), 200
+
+
+@app.route("/", methods=["GET"])
+def index():
+    html = """
+    <h2>Fake News Detection API</h2>
+    <ul>
+      <li><a href="/ping">/ping</a></li>
+      <li><a href="/api/reports">/api/reports</a></li>
+      <li><a href="/api/credibility">/api/credibility</a></li>
+      <!-- POST endpoints are shown as text (use Postman/curl to POST) -->
+      <li>POST /api/users</li>
+      <li>POST /api/sources</li>
+      <li>POST /api/articles</li>
+      <li>POST /api/reports</li>
+      <li>POST /api/credibility</li>
+    </ul>
+    """
+    return html, 200
 
 
 # -------------------------------------
