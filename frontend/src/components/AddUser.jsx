@@ -7,11 +7,15 @@ export default function AddUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/users", form);
+      console.log("Sending payload:", form);
+      const res = await axios.post("/api/users", form); // proxy -> 127.0.0.1:5000
+      console.log("Response:", res);
       alert("✅ User added successfully!");
     } catch (err) {
-      console.error(err);
-      alert("❌ Failed to add user. Check backend or connection.");
+      console.error("AXIOS ERROR:", err);
+      // show server message if available
+      const serverMsg = err?.response?.data || err?.message || "Unknown error";
+      alert("❌ Failed to add user: " + JSON.stringify(serverMsg));
     }
   };
 

@@ -37,16 +37,38 @@ def add_user():
 # -------------------------------------
 @app.route("/api/sources", methods=["POST"])
 def add_source():
-    data = request.json
-    db = get_connection()
-    cursor = db.cursor()
-    query = "INSERT INTO Source (SourceName, Domain, TrustRating) VALUES (%s, %s, %s)"
-    values = (data["name"], data["domain"], data["trust"])
-    cursor.execute(query, values)
-    db.commit()
-    cursor.close()
-    db.close()
-    return jsonify({"message": "Source added successfully"}), 201
+    data = request.json or {}
+    conn = None
+    cursor = None
+    try:
+        name = data.get("name")
+        domain = data.get("domain")
+        # ensure trust is numeric (defaults to 50.00)
+        try:
+            trust = float(data.get("trust")) if data.get("trust") not in (None, "") else 50.0
+        except ValueError:
+            return jsonify({"error": "Invalid trust value; must be a number"}), 400
+
+        if not name or not domain:
+            return jsonify({"error": "Missing required fields: name and domain"}), 400
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        # Insert using the actual column name `Name`
+        cursor.execute(
+            "INSERT INTO Source (Name, Domain, TrustRating) VALUES (%s, %s, %s)",
+            (name, domain, trust),
+        )
+        conn.commit()
+        return jsonify({"message": "Source added successfully"}), 201
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 # -------------------------------------
 # ARTICLE ROUTES
