@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import ReportRow from "./ReportRow";
 
 export default function ViewReports() {
   const [reports, setReports] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Fetch reports on load or when refreshKey changes
   useEffect(() => {
-    axios.get("/api/reports").then((res) => setReports(res.data));
-  }, []);
+    axios.get("/api/reports")
+      .then((res) => setReports(res.data))
+      .catch((err) => console.error("Error fetching reports:", err));
+  }, [refreshKey]);
+
+  // Function to refresh list after marking reviewed
+  const refreshReports = () => setRefreshKey((prev) => prev + 1);
 
   return (
     <div>
@@ -20,19 +28,21 @@ export default function ViewReports() {
             <th>Reason</th>
             <th>Status</th>
             <th>Date</th>
+            <th>Action</th> {/* new column for the button */}
           </tr>
         </thead>
         <tbody>
-          {reports.map((r) => (
-            <tr key={r.ReportID}>
-              <td>{r.ReportID}</td>
-              <td>{r.Reporter}</td>
-              <td>{r.ArticleTitle}</td>
-              <td>{r.Reason}</td>
-              <td>{r.Status}</td>
-              <td>{new Date(r.ReportDate).toLocaleString()}</td>
+          {reports.length > 0 ? (
+            reports.map((r) => (
+              <ReportRow key={r.ReportID} report={r} onReviewed={refreshReports} />
+            ))
+          ) : (
+            <tr>
+              <td colSpan="7" className="text-center text-muted">
+                No reports found
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
