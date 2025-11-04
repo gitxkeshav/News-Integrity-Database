@@ -4,7 +4,6 @@ import axios from "axios";
 export default function AddCredibilityCheck() {
   const [form, setForm] = useState({
     article_id: "",
-    ai_score: "",
     factcheck_score: "",
     final_verdict: "Unverified",
     checked_by: "",
@@ -22,19 +21,61 @@ export default function AddCredibilityCheck() {
   };
 
   return (
-    <div>
-      <h4>Add Credibility Check</h4>
+    <div className="form-card">
       <form onSubmit={handleSubmit}>
-        <input className="form-control mb-2" placeholder="Article ID" onChange={(e) => setForm({ ...form, article_id: e.target.value })} />
-        <input className="form-control mb-2" placeholder="AI Score (0–1)" onChange={(e) => setForm({ ...form, ai_score: e.target.value })} />
-        <input className="form-control mb-2" placeholder="Fact-Check Score (0–1)" onChange={(e) => setForm({ ...form, factcheck_score: e.target.value })} />
-        <select className="form-control mb-2" onChange={(e) => setForm({ ...form, final_verdict: e.target.value })}>
-          <option value="Unverified">Unverified</option>
-          <option value="Real">Real</option>
-          <option value="Fake">Fake</option>
-        </select>
-        <input className="form-control mb-2" placeholder="Checked By (User ID)" onChange={(e) => setForm({ ...form, checked_by: e.target.value })} />
-        <button className="btn btn-warning">Add Check</button>
+        <div className="mb-3">
+          <label className="form-label">Article ID</label>
+          <input 
+            type="number"
+            className="form-control" 
+            placeholder="Enter article ID" 
+            value={form.article_id}
+            onChange={(e) => setForm({ ...form, article_id: e.target.value })} 
+            required
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Fact-Check Score (0-1)</label>
+          <input 
+            type="number"
+            step="0.01"
+            min="0"
+            max="1"
+            className="form-control" 
+            placeholder="0.00 - 1.00" 
+            value={form.factcheck_score}
+            onChange={(e) => setForm({ ...form, factcheck_score: e.target.value })} 
+            required
+          />
+          <small className="form-text text-muted">Score between 0 (fake) and 1 (real)</small>
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Final Verdict</label>
+          <select 
+            className="form-control" 
+            value={form.final_verdict}
+            onChange={(e) => setForm({ ...form, final_verdict: e.target.value })}
+          >
+            <option value="Unverified">Unverified</option>
+            <option value="Real">Real</option>
+            <option value="Fake">Fake</option>
+          </select>
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Checked By (User ID)</label>
+          <input 
+            type="number"
+            className="form-control" 
+            placeholder="Enter checker user ID" 
+            value={form.checked_by}
+            onChange={(e) => setForm({ ...form, checked_by: e.target.value })} 
+          />
+          <small className="form-text text-muted">Optional - Leave blank if not assigned to a specific user</small>
+        </div>
+        <button type="submit" className="btn btn-warning w-100">
+          <i className="bi bi-check-circle me-2"></i>
+          Add Credibility Check
+        </button>
       </form>
     </div>
   );

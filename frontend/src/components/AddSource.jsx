@@ -16,13 +16,45 @@ export default function AddSource() {
   };
 
   return (
-    <div>
-      <h4>Add Source</h4>
+    <div className="form-card">
       <form onSubmit={handleSubmit}>
-        <input className="form-control mb-2" placeholder="Source Name" onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input className="form-control mb-2" placeholder="Domain (e.g. cnn.com)" onChange={(e) => setForm({ ...form, domain: e.target.value })} />
-        <input className="form-control mb-2" placeholder="Trust Rating (0–100)" onChange={(e) => setForm({ ...form, trust: e.target.value })} />
-        <button className="btn btn-success">Add Source</button>
+        <div className="mb-3">
+          <label className="form-label">Source Name</label>
+          <input 
+            className="form-control" 
+            placeholder="e.g. CNN, BBC News" 
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })} 
+            required
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Domain</label>
+          <input 
+            className="form-control" 
+            placeholder="e.g. cnn.com" 
+            value={form.domain}
+            onChange={(e) => setForm({ ...form, domain: e.target.value })} 
+            required
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Initial Trust Rating (0-100)</label>
+          <input 
+            type="number"
+            min="0"
+            max="100"
+            className="form-control" 
+            placeholder="50" 
+            value={form.trust}
+            onChange={(e) => setForm({ ...form, trust: e.target.value })} 
+          />
+          <small className="form-text text-muted">Default: 50. Will be updated automatically by triggers</small>
+        </div>
+        <button type="submit" className="btn btn-success w-100">
+          <i className="bi bi-building me-2"></i>
+          Add Source
+        </button>
       </form>
     </div>
   );

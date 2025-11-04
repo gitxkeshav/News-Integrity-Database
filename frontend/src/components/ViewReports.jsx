@@ -16,35 +16,43 @@ export default function ViewReports() {
   // Function to refresh list after marking reviewed
   const refreshReports = () => setRefreshKey((prev) => prev + 1);
 
+  const getStatusBadge = (status) => {
+    if (status === 'Reviewed') return 'badge bg-success';
+    if (status === 'Dismissed') return 'badge bg-secondary';
+    return 'badge bg-warning text-dark';
+  };
+
   return (
     <div>
-      <h4>All Reports</h4>
-      <table className="table table-bordered mt-3">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Reporter</th>
-            <th>Article</th>
-            <th>Reason</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Action</th> {/* new column for the button */}
-          </tr>
-        </thead>
-        <tbody>
-          {reports.length > 0 ? (
-            reports.map((r) => (
-              <ReportRow key={r.ReportID} report={r} onReviewed={refreshReports} />
-            ))
-          ) : (
-            <tr>
-              <td colSpan="7" className="text-center text-muted">
-                No reports found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      {reports.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📋</div>
+          <p>No reports found.</p>
+        </div>
+      ) : (
+        <div className="scrollable-container">
+          <div className="table-responsive">
+            <table className="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Reporter</th>
+                <th>Article</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reports.map((r) => (
+                <ReportRow key={r.ReportID} report={r} onReviewed={refreshReports} />
+              ))}
+            </tbody>
+          </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
