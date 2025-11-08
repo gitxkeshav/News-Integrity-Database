@@ -22,15 +22,65 @@ export default function AddArticle() {
   };
 
   return (
-    <div>
-      <h4>Add Article</h4>
+    <div className="form-card">
       <form onSubmit={handleSubmit}>
-        <input className="form-control mb-2" placeholder="Title" onChange={(e) => setForm({ ...form, title: e.target.value })} />
-        <textarea className="form-control mb-2" placeholder="Content" onChange={(e) => setForm({ ...form, content: e.target.value })}></textarea>
-        <input className="form-control mb-2" placeholder="URL" onChange={(e) => setForm({ ...form, url: e.target.value })} />
-        <input className="form-control mb-2" placeholder="Source ID" onChange={(e) => setForm({ ...form, source_id: e.target.value })} />
-        <input className="form-control mb-2" placeholder="Publish Date (YYYY-MM-DD)" onChange={(e) => setForm({ ...form, publish_date: e.target.value })} />
-        <button className="btn btn-info">Add Article</button>
+        <div className="mb-3">
+          <label className="form-label">Article Title</label>
+          <input 
+            className="form-control" 
+            placeholder="Enter article title" 
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })} 
+            required
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Content</label>
+          <textarea 
+            className="form-control" 
+            rows="4"
+            placeholder="Enter article content..." 
+            value={form.content}
+            onChange={(e) => setForm({ ...form, content: e.target.value })} 
+            required
+          ></textarea>
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Article URL</label>
+          <input 
+            type="url"
+            className="form-control" 
+            placeholder="https://example.com/article" 
+            value={form.url}
+            onChange={(e) => setForm({ ...form, url: e.target.value })} 
+            required
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Source ID</label>
+          <input 
+            type="number"
+            className="form-control" 
+            placeholder="Enter source ID" 
+            value={form.source_id}
+            onChange={(e) => setForm({ ...form, source_id: e.target.value })} 
+            required
+          />
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Publish Date</label>
+          <input 
+            type="date"
+            className="form-control" 
+            value={form.publish_date}
+            onChange={(e) => setForm({ ...form, publish_date: e.target.value })} 
+            required
+          />
+        </div>
+        <button type="submit" className="btn btn-info w-100">
+          <i className="bi bi-file-text me-2"></i>
+          Add Article
+        </button>
       </form>
     </div>
   );

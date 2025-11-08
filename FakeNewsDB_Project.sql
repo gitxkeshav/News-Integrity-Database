@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS report (
 CREATE TABLE IF NOT EXISTS credibilitycheck (
     CheckID INT AUTO_INCREMENT PRIMARY KEY,
     ArticleID INT NOT NULL,
-    AI_Score DECIMAL(3,2) DEFAULT 0.00 CHECK (AI_Score BETWEEN 0 AND 1),
     FactCheckScore DECIMAL(3,2) DEFAULT NULL CHECK (FactCheckScore BETWEEN 0 AND 1),
     FinalVerdict ENUM('Fake','Real','Unverified') DEFAULT 'Unverified',
     CheckedBy INT DEFAULT NULL,
@@ -107,10 +106,10 @@ INSERT INTO report (UserID, ArticleID, Reason, Status) VALUES
 ON DUPLICATE KEY UPDATE Reason = Reason;
 
 -- CREDIBILITY CHECKS
-INSERT INTO credibilitycheck (ArticleID, AI_Score, FactCheckScore, FinalVerdict, CheckedBy) VALUES
-(1, 0.95, 0.90, 'Real', 2),
-(2, 0.15, 0.10, 'Fake', 2),
-(3, 0.50, 0.55, 'Unverified', 2)
+INSERT INTO credibilitycheck (ArticleID, FactCheckScore, FinalVerdict, CheckedBy) VALUES
+(1, 0.90, 'Real', 2),
+(2, 0.10, 'Fake', 2),
+(3, 0.55, 'Unverified', 2)
 ON DUPLICATE KEY UPDATE CheckID = CheckID;
 
 -- Useful verification queries
@@ -168,7 +167,7 @@ FOR EACH ROW
 BEGIN
     DECLARE avg_score DECIMAL(5,4);
 
-    SELECT AVG((COALESCE(c.AI_Score,0) + COALESCE(c.FactCheckScore,0)) / 2)
+    SELECT AVG(COALESCE(c.FactCheckScore, 0))
     INTO avg_score
     FROM credibilitycheck c
     JOIN article a ON c.ArticleID = a.ArticleID
@@ -188,8 +187,9 @@ END$$
 DELIMITER ;
 
 -- Add ReviewStatus column to article if not present
-ALTER TABLE article
-  ADD COLUMN IF NOT EXISTS ReviewStatus ENUM('Normal','Under Review') DEFAULT 'Normal';
+-- Note: MySQL doesn't support IF NOT EXISTS for ALTER TABLE ADD COLUMN
+-- Run this manually if the column doesn't exist:
+-- ALTER TABLE article ADD COLUMN ReviewStatus ENUM('Normal','Under Review') DEFAULT 'Normal';
 
 DELIMITER $$
 CREATE TRIGGER flag_article_after_report
@@ -215,14 +215,13 @@ DELIMITER ;
 DELIMITER $$
 CREATE PROCEDURE perform_credibility_check (
     IN art_id INT,
-    IN ai_score DECIMAL(3,2),
     IN fact_score DECIMAL(3,2),
     IN verdict VARCHAR(20),
     IN checker_id INT
 )
 BEGIN
-    INSERT INTO credibilitycheck (ArticleID, AI_Score, FactCheckScore, FinalVerdict, CheckedBy)
-    VALUES (art_id, ai_score, fact_score, verdict, checker_id);
+    INSERT INTO credibilitycheck (ArticleID, FactCheckScore, FinalVerdict, CheckedBy)
+    VALUES (art_id, fact_score, verdict, checker_id);
     -- trigger update_source_trust_after_check will run automatically after insert
 END$$
 DELIMITER ;
@@ -247,7 +246,7 @@ DETERMINISTIC
 BEGIN
     DECLARE avg_score DECIMAL(5,4);
 
-    SELECT AVG((COALESCE(AI_Score,0) + COALESCE(FactCheckScore,0))/2)
+    SELECT AVG(COALESCE(FactCheckScore, 0))
     INTO avg_score
     FROM credibilitycheck c
     JOIN article a ON c.ArticleID = a.ArticleID
@@ -283,7 +282,7 @@ WHERE a.ReviewStatus = 'Under Review'
 GROUP BY a.ArticleID;
 
 3️⃣ Show 5 most recent credibility checks with verdicts and source info
-SELECT c.CheckID, a.Title, s.Name AS SourceName, c.AI_Score, c.FactCheckScore, 
+SELECT c.CheckID, a.Title, s.Name AS SourceName, c.FactCheckScore, 
        c.FinalVerdict, c.CheckDate
 FROM credibilitycheck c
 JOIN article a ON c.ArticleID = a.ArticleID
