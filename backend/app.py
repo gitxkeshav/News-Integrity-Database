@@ -3,6 +3,8 @@ from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 from db_config import get_connection
 import traceback
+from werkzeug.security import generate_password_hash, check_password_hash
+import secrets
 
 app = Flask(__name__)
 CORS(app)
@@ -15,6 +17,112 @@ def recreate_trigger_without_ai_score(cursor, conn):
     """Recreate the update_source_trust_after_check trigger without AI_Score"""
     cursor.execute("DROP TRIGGER IF EXISTS update_source_trust_after_check")
     conn.commit()
+
+
+def ensure_password_column(cursor, conn):
+    """Ensure useraccount has PasswordHash column."""
+    try:
+        cursor.execute("SHOW COLUMNS FROM useraccount LIKE 'PasswordHash'")
+        if cursor.fetchone() is None:
+            cursor.execute("ALTER TABLE useraccount ADD COLUMN PasswordHash VARCHAR(255) NULL")
+            conn.commit()
+    except Exception:
+        # ignore if cannot alter
+        pass
+
+
+# -----------------------
+# AUTH ROUTES
+# -----------------------
+@app.route("/api/auth/signup", methods=["POST"])
+def auth_signup():
+    data = request.json or {}
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    role = (data.get("role") or "user").strip()
+
+    if not name or not email or not password:
+        return jsonify({"error": "Missing name, email, or password"}), 400
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # Ensure PasswordHash column exists
+        ensure_password_column(cursor, conn)
+
+        # Prevent duplicate emails
+        cursor.execute("SELECT UserID FROM useraccount WHERE Email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"error": "Email already registered"}), 409
+
+        pwd_hash = generate_password_hash(password)
+        cursor.execute(
+            "INSERT INTO useraccount (Name, Email, Role, PasswordHash) VALUES (%s, %s, %s, %s)",
+            (name, email, role, pwd_hash)
+        )
+        conn.commit()
+
+        # Fetch inserted user (id)
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        user_id_row = cursor.fetchone()
+        user_id = int(user_id_row[0]) if user_id_row else None
+
+        token = secrets.token_urlsafe(32)
+        return jsonify({
+            "token": token,
+            "user": {"UserID": user_id, "Name": name, "Email": email, "Role": role}
+        }), 201
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+@app.route("/api/auth/login", methods=["POST"])
+def auth_login():
+    data = request.json or {}
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    if not email or not password:
+        return jsonify({"error": "Missing email or password"}), 400
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Ensure PasswordHash column exists
+        ensure_password_column(cursor, conn)
+
+        cursor.execute("SELECT UserID, Name, Email, Role, PasswordHash FROM useraccount WHERE Email = %s", (email,))
+        user = cursor.fetchone()
+        if not user or not user.get("PasswordHash"):
+            return jsonify({"error": "Invalid credentials"}), 401
+        if not check_password_hash(user["PasswordHash"], password):
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        token = secrets.token_urlsafe(32)
+        return jsonify({
+            "token": token,
+            "user": {"UserID": user["UserID"], "Name": user["Name"], "Email": user["Email"], "Role": user["Role"]}
+        }), 200
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
     cursor.execute("""
         CREATE TRIGGER update_source_trust_after_check
         AFTER INSERT ON credibilitycheck
